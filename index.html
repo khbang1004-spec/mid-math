@@ -89,13 +89,14 @@
             <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
             <div id="modal-container"></div>
             
-            <header class="flex justify-between items-start mb-8">
-                <div>
-                    <h1 class="text-4xl font-extrabold text-gray-900 mb-2">중학교 수학 세부능력 특기사항 작성기</h1>
-                    <p class="text-lg text-gray-600">(ver.1)</p>
-                </div>
-                <div id="user-profile" class="flex items-center gap-4">
-                    <!-- 사용자 정보 및 로그아웃 버튼이 여기에 표시됩니다. -->
+            <!-- 수정된 헤더 -->
+            <header class="mb-8">
+                <h1 class="text-4xl font-extrabold text-gray-900 whitespace-nowrap">
+                    중학교 수학 세부능력 특기사항 작성기
+                    <span class="text-lg text-gray-600 font-normal">(ver.1)</span>
+                </h1>
+                <div id="user-profile-row" class="flex justify-end items-center gap-3 mt-2">
+                    <!-- 사용자 정보가 여기에 표시됩니다. -->
                 </div>
             </header>
             
@@ -150,7 +151,7 @@
         const loginContainer = document.getElementById('login-container');
         const appContainer = document.getElementById('app-container');
         const loginBtn = document.getElementById('login-btn');
-        const userProfileContainer = document.getElementById('user-profile');
+        const userProfileRow = document.getElementById('user-profile-row');
         const privacyCheckbox = document.getElementById('privacy-checkbox');
 
         // --- Authentication Logic ---
@@ -173,7 +174,7 @@
         };
 
         // --- UI Control based on Auth State ---
-        let isAppInitialized = false; // Flag to prevent multiple initializations
+        let isAppInitialized = false; 
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
@@ -181,24 +182,23 @@
                 appContainer.classList.remove('hidden');
                 appContainer.classList.add('animate-slideIn');
 
-                // 수정된 부분: 안정적인 UI 렌더링
-                userProfileContainer.innerHTML = ''; // Clear previous content to prevent duplication
+                userProfileRow.innerHTML = ''; 
 
                 const nameSpan = document.createElement('span');
-                nameSpan.className = 'font-semibold text-gray-700 whitespace-nowrap'; // whitespace-nowrap 추가
+                nameSpan.className = 'font-semibold text-gray-700 text-sm';
                 nameSpan.textContent = `${user.displayName}님`;
 
                 const profileImg = document.createElement('img');
                 profileImg.src = user.photoURL;
                 profileImg.alt = '프로필 사진';
-                profileImg.className = 'w-10 h-10 rounded-full border-2 border-gray-300 flex-shrink-0';
+                profileImg.className = 'w-8 h-8 rounded-full border-2 border-gray-300';
 
                 const logoutBtn = document.createElement('button');
-                logoutBtn.className = 'px-4 py-2 bg-red-500 text-white text-sm rounded-md shadow-sm hover:bg-red-600 transition flex-shrink-0';
+                logoutBtn.className = 'px-3 py-1 bg-red-500 text-white text-xs rounded-md shadow-sm hover:bg-red-600 transition';
                 logoutBtn.textContent = '로그아웃';
                 logoutBtn.addEventListener('click', signOutUser);
 
-                userProfileContainer.append(nameSpan, profileImg, logoutBtn);
+                userProfileRow.append(nameSpan, profileImg, logoutBtn);
                 
                 if (!isAppInitialized) {
                     initializeAppLogic();
@@ -208,18 +208,19 @@
             } else {
                 appContainer.classList.add('hidden');
                 loginContainer.classList.remove('hidden');
-                userProfileContainer.innerHTML = '';
-                isAppInitialized = false; // Reset flag on logout
+                userProfileRow.innerHTML = '';
+                isAppInitialized = false; 
             }
         });
         
-        // --- Main App Logic ---
+        // --- Main App Logic (기존 코드와 동일) ---
         
         let state = {
             currentStep: 1,
             students: [],
             studentInput: '',
             selectedGrade: '',
+            className: '', // 반 이름 상태 추가
             selectedUnits: [],
             stagedStudentAchievements: {},
             generatedRecords: {},
@@ -885,6 +886,7 @@
                 showToast('반 이름을 입력해주세요.', 'error');
                 return;
             }
+            state.className = document.getElementById('class-name-header-input').value; // 헤더의 반 이름도 저장
             localStorage.setItem(`setk-class-${className}`, JSON.stringify(state));
             showToast(`'${className}' 반의 정보가 저장되었습니다.`);
             closeModal();
@@ -895,6 +897,7 @@
             if (savedState) {
                 state = JSON.parse(savedState);
                 showToast(`'${className}' 반의 정보를 불러왔습니다.`);
+                document.getElementById('class-name-header-input').value = state.className || '';
                 closeModal();
                 renderApp();
             } else {
@@ -915,7 +918,8 @@
         
         const showSaveClassModal = () => {
             const modalContainer = document.getElementById('modal-container');
-            const defaultName = `${state.selectedGrade || '반'} (${new Date().toLocaleDateString()})`;
+            const headerClassName = document.getElementById('class-name-header-input').value;
+            const defaultName = headerClassName || `${state.selectedGrade || '반'} (${new Date().toLocaleDateString()})`;
             modalContainer.innerHTML = `
                 <div class="modal-overlay" onclick="closeModal()">
                     <div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md" onclick="event.stopPropagation()">
